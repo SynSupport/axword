@@ -1,0 +1,175 @@
+;AXDemo
+;David Evans 07/01/98
+;
+;AXDemo is an example program which shows basic techniques for
+;accessing an OlE/ActiveX combination control.
+;
+.main axdemo
+
+.include "DBLDIR:windows.def"
+.include "WND:tools.def"
+.include "DBLDIR:ActiveX.def"
+
+.include "axword.def"
+
+.define CONT_W		,10		;Container Width
+.define CONT_H		,20		;Container Height
+.define INPUT_W		,25		;Input Window Width
+.define INPUT_H		,88		;Input Window Height
+.define DOTFILE		,"dunning.dot"	;Dunning filename
+
+.define MONSIZE		,"d10.2"	;Common money  buffer size
+.define STRSIZE		,"a100"		;Common string buffer size
+
+.align
+record
+	tkwid		,i4		;ID of Toolkit window
+	axcontid	,i4		;ID of ActiveX container object
+	axctlid		,i4		;ID of ActiveX control
+
+.align
+record
+	fcol_id		,i4		; File column id
+	i_inpid 	,i4		; Input Window ID
+	entry		,a100		; Save last menu entry
+
+.align
+record
+	h_invs		,D_ADDR		; Handle Invoices
+	h_pmts		,D_ADDR		; Handel Payments
+	h_ad		,D_ADDR		; Handel Address
+	pdue		,d10.2		; Past Due
+	cdue		,d10.2		; Current Due
+	tdue		,d10.2		; Total Due
+	tdate		,d10.2		; To Date Amount
+	status		,a100		; Account Status
+	rep		,a100		; Account Manager
+	dotpath		,a100		; DOT File Path
+	account 	,a10		; Account Number
+
+.align
+record
+	count		,i4
+	i		,i4
+	ret		,i4
+	len		,i4
+
+.proc
+	xcall u_start("AXWord", 1, 1)
+	xcall u_resize(INPUT_W, INPUT_H)
+
+	;** AX setup **
+
+	tkwid = %ax_tkwin("AXWord", CONT_W, CONT_H, axcontid)
+
+	onerror ERRHANDLER
+	axctlid = %ax_load(axcontid, "AXWordExample.AXWordCTL")
+	offerror
+
+	;** Handle input window **
+	xcall m_ldcol(fcol_id, g_utlib, "c_file")
+	xcall e_state(D_OFF, D_INTR)
+	xcall e_sect("AXWord", D_HEADER, D_CENTER)
+	xcall e_sect("Exit--F4", D_INFO)
+
+	;** Get Account Number **
+	xcall i_ldinp(i_inpid, g_utlib, "AXWordExample")
+	repeat
+	begin
+	    xcall i_input(i_inpid,, account,,,, D_NOTERM)
+	    if (g_select) then
+	    using g_entnam select
+	    ("O_EXIT"),
+	    begin
+	        exitloop
+	    end
+	    endusing
+	    else ;Generate Dunning Letter
+	    begin
+		onerror ERRHANDLER
+
+		;** Set Account **
+	        xcall ax_set(axctlid, "account", account)
+
+		;** Get & Set Invoices **
+	        count = %get_unpaid_invoices(account, h_invs)
+		for i from 1 thru count
+		begin
+        	    ret = %ax_call(axctlid, "SetInvoice",
+&					i, ^m(invs[i].data, h_invs))
+		    if ret goto ERRHANDLER
+		end
+		xcall mem_proc(DM_FREE, h_invs)
+
+		;** Get & Set Payments **
+	        count = %get_pmts(account, h_pmts)
+		for i from 1 thru count
+		begin
+        	    ret = %ax_call(axctlid, "SetPayment",
+&					i, ^m(pmts[i].data, h_pmts))
+		    if ret goto ERRHANDLER
+		end
+
+		;** Get & Set Past Due **
+		xcall get_pdue(account, pdue) 	
+        	xcall ax_set(axctlid, "pdue", pdue)
+
+		;** Get & Set Current Due **
+		xcall get_cdue(account, cdue) 	
+        	xcall ax_set(axctlid, "cdue", cdue)
+
+		;** Get & Set Total Due **
+		xcall get_tdue(account, tdue) 	
+        	xcall ax_set(axctlid, "tdue", tdue)
+
+		;** Get & Set Total Due **
+		xcall get_tdate(account, tdate) 	
+        	xcall ax_set(axctlid, "tdate", tdate)
+
+		;** Get & Set Status **
+		xcall get_status(account, status) 	
+        	xcall ax_set(axctlid, "status", status)
+
+		;** Get & Set Address **
+	        count = %get_ad(account, h_ad)
+		for i from 1 thru count
+		begin
+        	    ret = %ax_call(axctlid, "SetAddress",
+&					i, ^m(ad[i].data, h_ad))
+		    if ret goto ERRHANDLER
+		end
+
+		;** Get & Set Account Rep **
+		xcall get_rep(account, rep) 	
+        	xcall ax_set(axctlid, "rep", rep)
+
+		;** Set DOTFile Path **
+		xcall getlog("AXWORD", dotpath, len)
+		xcall trim(dotpath, len)
+	       	xcall ax_set(axctlid, "DOTFile",
+&			dotpath(1:len) + "\" + DOTFILE)
+
+		;** Generate dunning letter with account info **
+	        ret = %ax_call(axctlid, "Generate")
+		if ret goto ERRHANDLER
+
+	        xcall i_init(i_inpid)
+
+		offerror
+	        exitloop
+	    end
+	end
+
+	;Do not fall into error handlers
+	goto DONE
+
+;Exception handler
+ERRHANDLER,
+	;The AX control will put up a message dialog on error.
+	offerror
+	goto DONE
+
+DONE,
+	;xcall ax_delete(D_AX_ALL) ;Happens within u_finish
+	xcall u_finish
+.end

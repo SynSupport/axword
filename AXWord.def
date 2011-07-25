@@ -1,0 +1,9 @@
+structure invs
+	data	,a100
+
+structure pmts
+	data	,a100
+
+structure ad
+	data	,a100
+

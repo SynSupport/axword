@@ -1,0 +1,17 @@
+.script
+.date_generated "09/09/1998, 11:11"
+.version "6.3.1"
+
+.input AXWordExample, 3, 24
+.placement 6, 11
+.title "AXWord Example"
+.field Account, a8, pos(2, 4), prompt("Account"), fpos(2, 13), -
+     select(1, 2, 2, "123456", "234567")
+.end
+
+
+
+.column c_file, "File"
+.entry o_exit, "Exit", key(F4)
+.entry g_about, "About"
+.end

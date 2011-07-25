@@ -1,0 +1,272 @@
+;DumbDB.dbl
+;David Evans 07/01/98
+;
+;This module contains various dummy database function calls.
+;These are meant to simulate the access and calculation of
+;data given an account number.
+;
+;** Get Unpaid Invoices **
+;.function get_unpaid_invoices	,^val
+;	a_acct	,a		;Account Number
+;	a_invs	,D_ADDR		;Invoice List
+;
+;** Get Payments **
+;.function get_pmts	,^val
+;	a_acct	,a		;Account Number
+;	a_pmts	,D_ADDR		;Payment List
+;
+;** Get Past Due Amount **
+;.function get_pdue	,^val
+;	a_acct	,a		;Account Number
+;	a_pdue	,n.		;Past Due Amount
+;
+;** Get Current Due Amount **
+;.function get_cdue	,^val
+;	a_acct	,a		;Account Number
+;	a_cdue	,n.		;Current Due Amount
+;
+;** Get Total Due Amount **
+;.function get_tdue	,^val
+;	a_acct	,a		;Account Number
+;	a_tdue	,n.		;Total Due Amount
+;
+;** Get To Date Amount **
+;.function get_tdate	,^val
+;	a_acct	,a		;Account Number
+;	a_tdate	,n.		;To Date Amount Usage
+;
+;** Get Account Status **
+;.function get_status	,^val
+;	a_acct	,a		;Account Number
+;	a_status,a		;Account Status
+;
+;** Get Address **
+;.function get_ad	,^val
+;	a_acct	,a		;Account Number
+;	h_ad	,D_ADDR		;Account Address
+;
+;** Get Account Manager Name **
+;.function get_rep	,^val
+;	a_acct	,a		;Account Number
+;	a_rep	,a		;Account Rep Name
+;
+
+;** Get Unpaid Invoices **
+.function get_unpaid_invoices	,^val
+	a_acct	,a		;Account Number
+	h_invs	,D_ADDR		;Invoice List
+
+.align
+record
+	recs	,i4		;Number Of Records Returned
+
+.include "axword.def"
+
+.proc
+	upcase a_acct
+	clear recs
+
+	if (a_acct .eqs. "123456")
+	begin
+	    recs = 3
+	    h_invs = %mem_proc(DM_ALLOC+DM_STATIC, ^size(invs)*recs)
+	    ^m(invs[1].data, h_invs) = "DATE        INVOICE  AMOUNT    ITEM"
+	    ^m(invs[2].data, h_invs) = "-----------------------------------"
+	    ^m(invs[3].data, h_invs) = "01/01/1998  10001    $1000.00  PSDE"
+	end
+
+	if (a_acct .eqs. "234567")
+	begin
+	    recs = 4
+	    h_invs = %mem_proc(DM_ALLOC+DM_STATIC, ^size(invs)*recs)
+	    ^m(invs[1].data, h_invs) = "DATE        INVOICE  AMOUNT    ITEM"
+	    ^m(invs[2].data, h_invs) = "-----------------------------------"
+	    ^m(invs[3].data, h_invs) = "01/01/1998  20001    $1500.00  PSDE"
+	    ^m(invs[4].data, h_invs) = "07/01/1998  20002    $2000.00  RPTW"
+	end
+
+	freturn(recs)
+.end
+
+;** Get Payments **
+.function get_pmts	,^val
+	a_acct	,a		;Account Number
+	h_pmts	,D_ADDR		;Payment List
+
+record
+	recs	,i4		;Number Of Records Returned
+
+.include "axword.def"
+
+.proc
+	upcase a_acct
+	clear recs
+
+	if (a_acct .eqs. "123456")
+	begin
+	    recs = 5
+	    h_pmts = %mem_proc(DM_ALLOC+DM_STATIC, ^size(pmts)*recs)
+	    ^m(pmts[1].data, h_pmts) = "DATE        INVOICE  PAYMENT"
+	    ^m(pmts[2].data, h_pmts) = "-----------------------------"
+	    ^m(pmts[3].data, h_pmts) = "01/01/1997  00111    $5000.00"
+	    ^m(pmts[4].data, h_pmts) = "02/01/1997  00212    $5000.00"
+	    ^m(pmts[5].data, h_pmts) = "03/01/1997  00312    $1000.00"
+	end
+
+	if (a_acct .eqs. "234567")
+	begin
+	    recs = 4
+	    h_pmts = %mem_proc(DM_ALLOC+DM_STATIC, ^size(pmts)*recs)
+	    ^m(pmts[1].data, h_pmts) = "DATE      INVOICE  PAYMENT"
+	    ^m(pmts[2].data, h_pmts) = "---------------------------"
+	    ^m(pmts[3].data, h_pmts) = "01/15/1997  00121    $2000.00"
+	    ^m(pmts[4].data, h_pmts) = "02/15/1997  00222    $2000.00"
+	end
+
+	freturn(recs)
+.end
+
+;** Get Past Due Amount **
+.function get_pdue	,^val
+	a_acct	,a		;Account Number
+	a_pdue	,n.		;Past Due Amount
+
+.proc
+	upcase a_acct
+
+	if (a_acct .eqs. "123456")
+	begin
+	    a_pdue = 1000.00
+	end
+
+	if (a_acct .eqs. "234567")
+	begin
+	    a_pdue = 1500.00
+	end
+
+	freturn(0)
+.end
+
+;** Get Current Due Amount **
+.function get_cdue	,^val
+	a_acct	,a		;Account Number
+	a_cdue	,n.		;Current Due Amount
+.proc
+	upcase a_acct
+
+	if (a_acct .eqs. "123456")
+	begin
+	    a_cdue = 0.00
+	end
+
+	if (a_acct .eqs. "234567")
+	begin
+	    a_cdue = 2000.00
+	end
+
+	freturn(0)
+.end
+
+;** Get Total Due Amount **
+.function get_tdue	,^val
+	a_acct	,a		;Account Number
+	a_tdue	,n.		;Total Due Amount
+.proc
+	upcase a_acct
+
+	if (a_acct .eqs. "123456")
+	begin
+	    a_tdue = 1000.00
+	end
+
+	if (a_acct .eqs. "234567")
+	begin
+	    a_tdue = 3500.00
+	end
+
+	freturn(0)
+.end
+
+;** Get To Date Amount **
+.function get_tdate	,^val
+	a_acct	,a		;Account Number
+	a_tdate	,n.		;To Date Amount Usage
+.proc
+	upcase a_acct
+
+	if (a_acct .eqs. "123456")
+	begin
+	    a_tdate = 12000.00
+	end
+
+	if (a_acct .eqs. "234567")
+	begin
+	    a_tdate = 7500.00
+	end
+
+	freturn(0)
+.end
+
+;** Get Account Status **
+.function get_status	,^val
+	a_acct	,a		;Account Number
+	a_status,a		;Account Status
+.proc
+	upcase a_acct
+
+	if (a_acct .eqs. "123456")
+	begin
+	    a_status = "PAST DUE"
+	end
+
+	if (a_acct .eqs. "234567")
+	begin
+	    a_status = "PAST DUE"
+	end
+
+	freturn(0)
+.end
+
+;** Get Address **
+.function get_ad	,^val
+	a_acct	,a		;Account Number
+	h_ad	,D_ADDR		;Account Address
+
+record
+	recs	,i4		;Number Of Records Returned
+
+.include "axword.def"
+
+.proc
+	upcase a_acct
+	clear recs
+
+	if (a_acct .eqs. "123456")
+	begin
+	    recs = 3
+	    h_ad = %mem_proc(DM_ALLOC+DM_STATIC, ^size(ad)*recs)
+	    ^m(ad[1].data, h_ad) = "Rock Solid Software "
+	    ^m(ad[2].data, h_ad) = "3254 Hotshot Lane   "
+	    ^m(ad[3].data, h_ad) = "San Diego, CA  92008"
+	end
+
+	if (a_acct .eqs. "234567")
+	begin
+	    recs = 3
+	    h_ad = %mem_proc(DM_ALLOC+DM_STATIC, ^size(ad)*recs)
+	    ^m(ad[1].data, h_ad) = "Software House          "
+	    ^m(ad[2].data, h_ad) = "2222 Northshore Road    "
+	    ^m(ad[3].data, h_ad) = "San Francisco, CA  99834"
+	end
+
+	freturn(recs)
+.end
+
+;** Get Account Manager Name **
+.function get_rep	,^val
+	a_acct	,a		;Account Number
+	a_rep	,a		;Account Rep Name
+.proc
+	a_rep = "John Smith"
+	freturn(0)
+.end
